@@ -84,21 +84,70 @@
 library ieee;
   use ieee.std_logic_1164.all;
   use ieee.numeric_std.all;
- 
-entity thunderbird_fsm is 
---  port(
-	
---  );
+--| Binary State Encoding key
+--| --------------------
+--| State | Encoding
+--| --------------------
+--| OFF   | 000
+--| ON    | 001
+--| R1    | 010
+--| R2    | 011
+--| R3    | 100 
+--| L1    | 101
+--| L2    | 110
+--| L3    | 111
+--| --------------------
+ --| Binary State Encoding key
+--| --------------------
+--| State | Encoding
+--| --------------------
+--| OFF   | 000
+--| ON    |
+--| R1    |
+--| R2    |
+--| R3    |
+--| L1    |
+--| L2    |
+--| L3    |
+--| --------------------
+entity thunderbird_fsm is
+    port (
+        i_clk, i_reset  : in    std_logic;
+        i_left, i_right : in    std_logic;
+        o_lights_L      : out   std_logic_vector(2 downto 0);
+        o_lights_R      : out   std_logic_vector(2 downto 0)
+    );
 end thunderbird_fsm;
 
 architecture thunderbird_fsm_arch of thunderbird_fsm is 
 
+--Q0*= Q2'Q1'Q0'L+Q2'Q1Q0'+Q2Q1Q0'
+--Q1* = Q2'Q1'Q0'RL' + Q2'Q1Q0'+Q2Q1'Q0+Q2Q1Q0'
+--Q2* = Q2'Q1'Q0'R'L+Q2'Q1Q0+Q2Q1'Q0+Q2Q1Q0'
+--LC=Q2'Q1'Q0+Q2Q1Q0
+--LB=Q2'Q1'Q0+Q2Q1Q0'+Q2Q1Q0
+--LA=Q2'Q1'Q0+Q2Q1'Q0+Q2Q1Q0'+Q2Q1Q0
+--RC=Q2'Q1'Q0+Q2Q1'Q0'
+--RB=Q2'Q1'Q0+Q2'Q1Q0+Q2Q1'Q0'
+--RA=Q2'Q1'Q0+Q2'Q1Q0'+Q2'Q1Q0+Q2Q1'Q0'
 -- CONSTANTS ------------------------------------------------------------------
-  
+    signal f_Q: std_logic_vector(2 downto 0) := "000";
+    signal f_Q_next: std_logic_vector(2 downto 0) := "000";
+    
 begin
 
 	-- CONCURRENT STATEMENTS --------------------------------------------------------	
-	
+	f_Q_next(0) <= (not(f_Q(2)) and not(f_Q(1)) and not(f_Q(0)) and i_left) or (not (f_Q(2)) and f_Q(1) and not(f_Q(0))) or (f_Q(2) and f_Q(1) and not(f_Q(0)));
+    f_Q_next(1) <= (not(f_Q(2)) and not (f_Q(1)) and not (f_Q(0)) and i_right and not i_left) or (not (f_Q(2)) and f_Q(1) and not (f_Q(0))) or (f_Q(2) and not (f_Q(1)) and f_Q(0)) or (f_Q(2) and f_Q(1) and not f_Q(0));
+    f_Q_next(2) <= (not(f_Q(2)) and not (f_Q(1)) and not (f_Q(0)) and i_left and not i_right) or (not (f_Q(2)) and f_Q(1) and f_Q(0)) or (f_Q(2) and not (f_Q(1)) and f_Q(0)) or (f_Q(2) and f_Q(1) and not (f_Q(0)));
+    o_lights_L(2) <= (not(f_Q(2)) and not (f_Q(1)) and f_Q(0)) or (f_Q(2) and f_Q(1) and f_Q(1));
+    o_lights_L(1) <= (not(f_Q(2)) and not(f_Q(1)) and f_Q(0)) or (f_Q(2) and f_Q(1) and not(f_Q(0))) or (f_Q(2) and f_Q(1) and f_Q(0));
+    o_lights_L(0) <= (not(f_Q(2)) and not(f_Q(1)) and f_Q(0)) or (f_Q(2) and not(f_Q(1)) and f_Q(0)) or (f_Q(2) and not(f_Q(1)) and f_Q(0)) or (f_Q(2) and f_Q(1) and not(f_Q(1))) or (f_Q(2) and f_Q(1) and f_Q(0));
+    o_lights_R(2) <= (not(f_Q(2)) and not(f_Q(1)) and f_Q(0)) or (f_Q(2) and not(f_Q(1)) and not(f_Q(0)));
+    o_lights_R(1) <= (not(f_Q(2)) and not(f_Q(1)) and f_Q(0)) or (not(f_Q(2)) and f_Q(1) and f_Q(0)) or (f_Q(2) and not(f_Q(1)) and not(f_Q(0)));
+    o_lights_R(0) <= (not(f_Q(2)) and not(f_Q(1)) and f_Q(0)) or (not(f_Q(2)) and f_Q(1) and not(f_Q(0))) or (not(f_Q(2)) and f_Q(1) and (f_Q(0))) or (f_Q(2) and not(f_Q(1)) and not(f_Q(0)));
+    
+    
     ---------------------------------------------------------------------------------
 	
 	-- PROCESSES --------------------------------------------------------------------
