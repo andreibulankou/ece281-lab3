@@ -151,7 +151,14 @@ begin
     ---------------------------------------------------------------------------------
 	
 	-- PROCESSES --------------------------------------------------------------------
-    
+	register_proc : process (i_clk, i_reset)
+begin
+    if i_reset = '1' then
+        f_Q <= "000";        -- reset state is OFF
+    elsif (rising_edge(i_clk)) then
+        f_Q <= f_Q_next;    -- next state becomes current state
+    end if;
+end process register_proc;
 	-----------------------------------------------------					   
 				  
 end thunderbird_fsm_arch;
